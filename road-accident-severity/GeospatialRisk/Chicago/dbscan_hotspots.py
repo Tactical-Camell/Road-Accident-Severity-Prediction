@@ -1,7 +1,4 @@
-from __future__ import annotations
-
 from pathlib import Path
-
 import numpy as np
 import pandas as pd
 import geopandas as gpd
@@ -15,9 +12,8 @@ CENTROIDS_OUTPUT_PATH = PROJECT_ROOT / "data" / "output" / "chicago_cluster_cent
 RISK_TABLE_PATH = PROJECT_ROOT / "data" / "output" / "cluster_risk_table.csv"
 
 
-def prepare_coords_for_haversine(gdf: gpd.GeoDataFrame) -> np.ndarray:
-    """Return coordinates in radians ready for haversine DBSCAN."""
-
+def prepare_coords_for_haversine(gdf):
+    # get coordinates in radians for haversine distance calculation
     if gdf.empty:
         raise ValueError("GeoDataFrame must contain at least one row")
 
@@ -30,15 +26,14 @@ def prepare_coords_for_haversine(gdf: gpd.GeoDataFrame) -> np.ndarray:
     return coords_rad
 
 
-def run_dbscan_haversine(coords_rad: np.ndarray, eps_meters: float = 250.0, min_samples: int = 12) -> np.ndarray:
-    """Run DBSCAN with the haversine metric and return cluster labels."""
-
+def run_dbscan_haversine(coords_rad, eps_meters=250.0, min_samples=12):
+    # run DBSCAN clustering using haversine distance
     if coords_rad.ndim != 2 or coords_rad.shape[1] != 2:
         raise ValueError("Coordinate array must be shape (n_samples, 2)")
 
     eps_radians = eps_meters / 6371000.0
     print(
-        "Using eps=250m (~0.25km) for dense urban Chicago hotspots converted to radians",
+        "Using eps=250m for dense urban Chicago hotspots converted to radians",
         f"({eps_radians:.9f}) and min_samples={min_samples} to reduce noise.",
     )
     clusterer = DBSCAN(
@@ -51,9 +46,8 @@ def run_dbscan_haversine(coords_rad: np.ndarray, eps_meters: float = 250.0, min_
     return labels
 
 
-def compute_cluster_centroids(gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
-    """Return GeoDataFrame of centroid points for each labeled cluster."""
-
+def compute_cluster_centroids(gdf):
+    # calculate centroid points for each cluster
     clusters = gdf[gdf["cluster_id"] >= 0].copy()
     if clusters.empty:
         return gpd.GeoDataFrame(
@@ -75,9 +69,8 @@ def compute_cluster_centroids(gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
     return centroids
 
 
-def compute_cluster_severity(gdf: gpd.GeoDataFrame) -> pd.DataFrame:
-    """Compute severity metrics and weighted score for each cluster."""
-
+def compute_cluster_severity(gdf):
+    # calculate severity metrics for each cluster
     cluster_rows = gdf[gdf["cluster_id"] >= 0].copy()
     if cluster_rows.empty:
         return pd.DataFrame(
@@ -103,7 +96,7 @@ def compute_cluster_severity(gdf: gpd.GeoDataFrame) -> pd.DataFrame:
     )
     agg = agg.reset_index()
 
-    def weighted_score(row: pd.Series) -> float:
+    def weighted_score(row):
         numerator = (
             3 * row["sum_fatal"]
             + 2 * row["sum_incapacitating"]
@@ -123,7 +116,8 @@ def compute_cluster_severity(gdf: gpd.GeoDataFrame) -> pd.DataFrame:
     return agg
 
 
-def _cluster_subset(subset: gpd.GeoDataFrame, start_cluster_id: int) -> tuple[gpd.GeoDataFrame, int]:
+def _cluster_subset(subset, start_cluster_id):
+    # run clustering on a subset of data
     coords_rad = prepare_coords_for_haversine(subset)
     labels = run_dbscan_haversine(coords_rad)
 
@@ -139,17 +133,14 @@ def _cluster_subset(subset: gpd.GeoDataFrame, start_cluster_id: int) -> tuple[gp
     return subset, next_cluster_id
 
 
-def compute_dbscan_hotspots(
-    gdf: gpd.GeoDataFrame, group_col: str = "community_area_number"
-) -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame, pd.DataFrame]:
-    """Run DBSCAN per community area (to limit memory) and return derived tables."""
-
+def compute_dbscan_hotspots(gdf, group_col="community_area_number"):
+    # run DBSCAN clustering per community area to manage memory
     if group_col not in gdf.columns:
         grouped_iter = [(None, gdf)]
     else:
         grouped_iter = gdf.groupby(group_col, dropna=False)
 
-    clustered_parts: list[gpd.GeoDataFrame] = []
+    clustered_parts = []
     next_cluster_id = 0
     for group_value, subset in grouped_iter:
         if isinstance(group_value, tuple):  # pandas may return tuples for multi-index
@@ -174,7 +165,7 @@ def compute_dbscan_hotspots(
     return clustered, centroids, severity
 
 
-def main() -> None:
+def main():
     gdf = gpd.read_file(CLUSTERS_SOURCE_PATH)
 
     if gdf.crs is None:

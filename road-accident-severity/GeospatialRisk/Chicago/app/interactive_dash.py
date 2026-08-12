@@ -5,7 +5,7 @@ This module provides comprehensive filtering capabilities for the Chicago crash 
 including environmental, temporal, crash type, and severity filters with dynamic layer toggles.
 Designed for performance with 740,000+ crash points using efficient caching and indexing.
 
-Author: Geospatial Engineering Team
+Author: Chirudeva Reddy
 Version: 1.0
 """
 
@@ -360,15 +360,25 @@ def create_interactive_choropleth(community_areas_df: pd.DataFrame,
     return fig
 
 def create_crash_points_layer(crashes_df: pd.DataFrame, 
-                             max_points: int = 5000) -> go.Figure:
+                             max_points: int = 2000) -> go.Figure:
     """Create crash points layer with performance optimization."""
     
     fig = go.Figure()
     
     if len(crashes_df) > 0:
-        # Sample for performance
+        # Aggressive sampling for performance and network efficiency
         if len(crashes_df) > max_points:
-            display_crashes = crashes_df.sample(max_points, random_state=42)
+            # Stratified sampling to preserve severity distribution
+            fatal_crashes = crashes_df[crashes_df['fatal'] > 0]
+            injury_crashes = crashes_df[(crashes_df['serious'] > 0) | (crashes_df['moderate'] > 0)]
+            other_crashes = crashes_df[(crashes_df['fatal'] == 0) & (crashes_df['serious'] == 0) & (crashes_df['moderate'] == 0)]
+            
+            # Sample proportionally
+            sample_size = max_points - min(len(fatal_crashes), 200)  # Reserve space for fatalities
+            injury_sample = injury_crashes.sample(min(len(injury_crashes), sample_size//2), random_state=42)
+            other_sample = other_crashes.sample(min(len(other_crashes), sample_size//2), random_state=42)
+            
+            display_crashes = pd.concat([fatal_crashes, injury_sample, other_sample])
         else:
             display_crashes = crashes_df
         
@@ -651,9 +661,8 @@ def create_statistics_panel() -> dbc.Card:
         ])
     ], className="mb-4")
 
-# =============================================================================
+
 # MAIN DASHBOARD
-# =============================================================================
 
 def create_interactive_dashboard() -> Dash:
     """Create the main interactive dashboard."""
@@ -705,9 +714,7 @@ def create_interactive_dashboard() -> Dash:
         ])
     ], fluid=True)
     
-    # =============================================================================
     # CALLBACKS
-    # =============================================================================
     
     @app.callback(
         [Output('main-map', 'figure'),
@@ -791,12 +798,9 @@ def create_interactive_dashboard() -> Dash:
             fig = go.Figure()
             
             # Add base map layers based on toggles
-            print(f"DEBUG: Layer toggles selected: {layers}")
-            
             # Only add layers that are explicitly selected
             if layers and 'choropleth' in layers:
                 try:
-                    print("DEBUG: Adding choropleth layer")
                     choropleth_fig = create_interactive_choropleth(community_areas_df, filters, True)
                     for trace in choropleth_fig.data:
                         fig.add_trace(trace)
@@ -805,7 +809,6 @@ def create_interactive_dashboard() -> Dash:
             
             if layers and 'clusters' in layers:
                 try:
-                    print("DEBUG: Adding clusters layer")
                     cluster_fig = create_cluster_heatmap(clusters_df, pd.DataFrame(store_data['cluster_risk']))
                     for trace in cluster_fig.data:
                         fig.add_trace(trace)
@@ -814,14 +817,11 @@ def create_interactive_dashboard() -> Dash:
             
             if layers and 'crashes' in layers:
                 try:
-                    print("DEBUG: Adding crash points layer")
-                    crash_fig = create_crash_points_layer(filtered_crashes)
+                    crash_fig = create_crash_points_layer(filtered_crashes, max_points=2000)  # Reduced from 5000
                     for trace in crash_fig.data:
                         fig.add_trace(trace)
                 except Exception as e:
                     print(f"Error creating crash points: {e}")
-            
-            print(f"DEBUG: Total traces in figure: {len(fig.data)}")
             
             # Update layout
             fig.update_layout(
@@ -868,12 +868,19 @@ def create_interactive_dashboard() -> Dash:
     
     return app
 
-# =============================================================================
+
 # MAIN EXECUTION
-# =============================================================================
 
 if __name__ == "__main__":
     print("Initializing Chicago Traffic Crash Intelligence Platform...")
+    
+    # Disable debug mode to reduce network overhead
+    import os
+    os.environ['DASH_DEBUG_MODE'] = 'false'
+    
+    # Create the dashboard app
     app = create_interactive_dashboard()
     print("Dashboard ready. Starting server...")
-    app.run(debug=True, host="127.0.0.1", port=8051)
+    
+    # Run with optimized settings
+    app.run(debug=False, dev_tools_ui=False, dev_tools_props_check=False)

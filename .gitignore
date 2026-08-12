@@ -1,0 +1,27 @@
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Virtual environments & IDEs
+.venv/
+venv/
+ENV/
+.idea/
+.vscode/
+
+# Python bytecode & cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Large datasets & raw files (>50MB)
+*.csv
+*.xlsx
+*.parquet
+*.zip
+road-accident-severity/GeospatialRisk/Chicago/dataset/

@@ -1,13 +1,7 @@
-from __future__ import annotations
-
-"""Utilities to clean the Chicago crash dataset."""
-
 import pandas as pd
 
-
-def clean_chicago_crash_dataset(df: pd.DataFrame) -> pd.DataFrame:
-    """Return rows and columns valid for geospatial risk mapping."""
-
+def clean_chicago_crash_dataset(df):
+    # columns we need for the analysis
     required_columns = [
         "POSTED_SPEED_LIMIT",
         "TRAFFIC_CONTROL_DEVICE",
@@ -40,6 +34,7 @@ def clean_chicago_crash_dataset(df: pd.DataFrame) -> pd.DataFrame:
         "LONGITUDE",
     ]
 
+    # environmental columns that should have some data
     env_columns = [
         "TRAFFIC_CONTROL_DEVICE",
         "DEVICE_CONDITION",
@@ -51,6 +46,7 @@ def clean_chicago_crash_dataset(df: pd.DataFrame) -> pd.DataFrame:
         "ROAD_DEFECT",
     ]
 
+    # injury related columns
     injury_columns = [
         "INJURIES_TOTAL",
         "INJURIES_FATAL",
@@ -63,9 +59,11 @@ def clean_chicago_crash_dataset(df: pd.DataFrame) -> pd.DataFrame:
 
     df = df.copy()
 
+    # make sure lat/lon are numeric
     df["LATITUDE"] = pd.to_numeric(df["LATITUDE"], errors="coerce")
     df["LONGITUDE"] = pd.to_numeric(df["LONGITUDE"], errors="coerce")
 
+    # check for valid coordinates
     valid_coords = (
         df["LATITUDE"].between(-90, 90)
         & df["LONGITUDE"].between(-180, 180)
@@ -75,12 +73,16 @@ def clean_chicago_crash_dataset(df: pd.DataFrame) -> pd.DataFrame:
         & (df["LONGITUDE"] != 0)
     )
 
+    # make sure we have some environmental data
     env_empty = df[env_columns].isna().all(axis=1)
 
+    # calculate total injuries for each crash
     injury_sum = df[injury_columns].fillna(0).sum(axis=1)
+    # filter out drive-away crashes with no injuries
     zero_injury_driveaway = (
         (injury_sum == 0) & (df["CRASH_TYPE"] == "NO INJURY / DRIVE AWAY")
     )
 
+    # keep only rows that pass all our checks
     keep_mask = valid_coords & ~env_empty & ~zero_injury_driveaway
     return df.loc[keep_mask, required_columns].reset_index(drop=True)

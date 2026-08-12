@@ -1,7 +1,4 @@
-from __future__ import annotations
-
 from pathlib import Path
-
 import numpy as np
 import pandas as pd
 import geopandas as gpd
@@ -21,9 +18,8 @@ INJURY_COLUMNS = [
 ]
 
 
-def compute_crash_severity(gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
-    """Add crash-level weighted severity scores."""
-
+def compute_crash_severity(gdf):
+    # add severity scores to each crash
     missing = [col for col in INJURY_COLUMNS if col not in gdf.columns]
     if missing:
         raise KeyError(f"Missing injury columns: {missing}")
@@ -46,7 +42,8 @@ def compute_crash_severity(gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
     return gdf
 
 
-def _aggregate_common(df: pd.DataFrame) -> pd.DataFrame:
+def _aggregate_common(df):
+    # calculate risk index for aggregated data
     total_injuries = (
         df["fatal"].astype(float)
         + df["serious"].astype(float)
@@ -66,9 +63,8 @@ def _aggregate_common(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def compute_community_risk(gdf: gpd.GeoDataFrame) -> pd.DataFrame:
-    """Aggregate severity metrics per community area."""
-
+def compute_community_risk(gdf):
+    # calculate risk metrics for each community area
     if "community_area_number" not in gdf.columns:
         raise KeyError("community_area_number column missing")
 
@@ -83,7 +79,7 @@ def compute_community_risk(gdf: gpd.GeoDataFrame) -> pd.DataFrame:
         mean_weighted_severity=("weighted_severity", "mean"),
     ).reset_index()
 
-    # Ensure all 77 community areas are present, even if zero crashes
+    # make sure all 77 community areas are included
     area_numbers = pd.Series(range(1, 78), dtype="Int64", name="community_area_number")
     agg["community_area_number"] = agg["community_area_number"].astype("Int64")
     agg = area_numbers.to_frame().merge(agg, on="community_area_number", how="left")
@@ -96,9 +92,8 @@ def compute_community_risk(gdf: gpd.GeoDataFrame) -> pd.DataFrame:
     return agg
 
 
-def compute_cluster_risk(gdf: gpd.GeoDataFrame) -> pd.DataFrame:
-    """Aggregate severity metrics per DBSCAN cluster."""
-
+def compute_cluster_risk(gdf):
+    # calculate risk metrics for each cluster
     if "cluster_id" not in gdf.columns:
         raise KeyError("cluster_id column missing")
 
@@ -117,16 +112,15 @@ def compute_cluster_risk(gdf: gpd.GeoDataFrame) -> pd.DataFrame:
     return agg
 
 
-def compute_severity_pipeline(gdf: gpd.GeoDataFrame):
-    """Full crash + community + cluster severity scoring pipeline."""
-
+def compute_severity_pipeline(gdf):
+    # run the full severity analysis pipeline
     gdf = compute_crash_severity(gdf)
     community_risk = compute_community_risk(gdf)
     cluster_risk = compute_cluster_risk(gdf)
     return gdf, community_risk, cluster_risk
 
 
-def main() -> None:
+def main():
     gdf = gpd.read_file(CRASHES_WITH_CLUSTERS_PATH)
 
     required_cols = {

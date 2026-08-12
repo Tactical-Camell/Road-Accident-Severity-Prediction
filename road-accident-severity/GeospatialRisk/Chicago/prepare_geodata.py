@@ -1,11 +1,7 @@
-from __future__ import annotations
-
 from pathlib import Path
-
 import geopandas as gpd
 import pandas as pd
 from shapely.geometry import Point
-
 from .cleaning import clean_chicago_crash_dataset
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -15,9 +11,8 @@ COMMUNITY_SHP_PATH = PROJECT_ROOT / "Chicago" / "data" / "Boundaries" / "geo_exp
 COMMUNITY_OUTPUT_PATH = PROJECT_ROOT / "data" / "output" / "chicago_crashes_with_areas.geojson"
 
 
-def convert_chicago_to_geodataframe(df: pd.DataFrame) -> gpd.GeoDataFrame:
-    """Cleans coordinates, converts to Point geometry, and returns a GeoDataFrame."""
-
+def convert_chicago_to_geodataframe(df):
+    # convert lat/lon to points and create geodataframe
     df = df.copy()
     df["LATITUDE"] = pd.to_numeric(df["LATITUDE"], errors="coerce")
     df["LONGITUDE"] = pd.to_numeric(df["LONGITUDE"], errors="coerce")
@@ -40,7 +35,8 @@ def convert_chicago_to_geodataframe(df: pd.DataFrame) -> gpd.GeoDataFrame:
     return gdf
 
 
-def load_community_areas(path: Path) -> gpd.GeoDataFrame:
+def load_community_areas(path):
+    # load community area boundaries and standardize column names
     gdf = gpd.read_file(path)
     if gdf.crs is None or gdf.crs.to_epsg() != 4326:
         gdf = gdf.to_crs(epsg=4326)
@@ -67,7 +63,8 @@ def load_community_areas(path: Path) -> gpd.GeoDataFrame:
     return gdf
 
 
-def spatial_join_chicago(crash_gdf: gpd.GeoDataFrame, community_gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
+def spatial_join_chicago(crash_gdf, community_gdf):
+    # join crash points to community areas
     if "geometry" not in crash_gdf.columns or "geometry" not in community_gdf.columns:
         raise ValueError("Both GeoDataFrames must include a 'geometry' column for spatial join.")
 
@@ -86,7 +83,7 @@ def spatial_join_chicago(crash_gdf: gpd.GeoDataFrame, community_gdf: gpd.GeoData
     return merged
 
 
-def main() -> None:
+def main():
     df_raw = pd.read_excel(RAW_DATA_PATH, engine="openpyxl")
     df_clean = clean_chicago_crash_dataset(df_raw)
 
