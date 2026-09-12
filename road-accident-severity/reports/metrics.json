@@ -1,0 +1,9 @@
+{
+  "best_model": "LightGBM",
+  "test_balanced_accuracy": 0.7988166627149549,
+  "test_macro_f1": 0.8064553387839802,
+  "classes": [
+    "INJURY AND / OR TOW DUE TO CRASH",
+    "NO INJURY / DRIVE AWAY"
+  ]
+}
