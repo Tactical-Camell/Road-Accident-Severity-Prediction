@@ -175,7 +175,7 @@ Then open `http://127.0.0.1:8050/`.
 
 </div>
 
-**Supervisor:** Dr. Ashish Gupta
+**Supervisor:** Dr. Ashish Gupta  
 **Institution:** BITS Pilani — Dubai Campus, DIAC, Dubai, U.A.E.
 
 Academic project. Licensed for educational and research use.
