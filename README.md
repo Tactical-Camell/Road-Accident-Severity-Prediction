@@ -90,6 +90,7 @@ Clone the repository and install the dependencies:
 ```bash
 git clone https://github.com/Chirudeva-Reddy/Road-Accident-Severity-Prediction.git
 cd Road-Accident-Severity-Prediction
+git checkout geospatial-clustering-chicago
 pip install -r requirements.txt
 ```
 
