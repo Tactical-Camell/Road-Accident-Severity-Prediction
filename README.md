@@ -10,6 +10,7 @@ severity-weighted risk indices.
 [![Python](https://img.shields.io/badge/Python-3.13-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
 [![LightGBM](https://img.shields.io/badge/LightGBM-Best_Model-9ACD32?style=for-the-badge)](road-accident-severity/reports/metrics.json)
 [![DBSCAN](https://img.shields.io/badge/DBSCAN-Haversine-8b5cf6?style=for-the-badge)](road-accident-severity/GeospatialRisk/Chicago/dbscan_hotspots.py)
+[![Report](https://img.shields.io/badge/📄_Project_Report-PDF-e11d48?style=for-the-badge)](report/report.pdf)
 
 ### 👉 [**Try the live dashboard**](https://sanya28wd.github.io/Road-Accident-Severity-Prediction/) — adjust the inputs and watch the prediction move.
 
@@ -25,6 +26,7 @@ severity-weighted risk indices.
 |---|---|---|
 | [📊 Dataset & clustering](#-dataset--dbscan-hotspot-clustering) | [📈 Risk score](#-weighted-severity-risk-score) | [🧠 Model results](#-model-results--explainability) |
 | [🧱 Project structure](#-project-structure) | [🚀 Getting started](#-getting-started) | [👥 Contributors](#-contributors) |
+| [📄 Project report](#-project-report) | | |
 
 ---
 
@@ -162,6 +164,17 @@ python GeospatialRisk/Chicago/app/interactive_dash.py
 Then open `http://127.0.0.1:8050/`.
 
 </details>
+
+---
+
+## 📄 Project Report
+
+The full write-up — motivation, workflow, algorithms, results, SHAP/LIME analysis and the
+geospatial study — is typeset in LaTeX:
+
+- **[report/report.pdf](report/report.pdf)** — 15 pages, compiled output
+- [report/report.tex](report/report.tex) — source; rebuild with `latexmk -pdf report.tex` from `report/`
+- [report/shap-percent-table.tex](report/shap-percent-table.tex) — generated from `shap_top20_percent.csv`
 
 ---
 

@@ -25,3 +25,12 @@ __pycache__/
 *.parquet
 *.zip
 road-accident-severity/GeospatialRisk/Chicago/dataset/
+
+# LaTeX build artefacts
+*.aux
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.toc
+*.synctex.gz
