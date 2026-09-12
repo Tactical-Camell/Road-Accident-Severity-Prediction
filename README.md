@@ -1,6 +1,6 @@
 # 🚦 Road Accident Severity Prediction & Geospatial Risk Mapping
 
-A comprehensive machine learning and geospatial analytics framework for analyzing road crash severity, detecting geographic hotspots using **DBSCAN clustering**, computing severity-weighted risk indices, and interactively visualizing accident risks across multiple urban datasets (**NSW, Australia** and **Chicago, IL, USA**).
+A comprehensive machine learning and geospatial analytics framework for analyzing road crash severity, detecting geographic hotspots using **DBSCAN clustering**, computing severity-weighted risk indices, and interactively visualizing accident risks across the **City of Chicago, IL, USA** crash dataset.
 
 ---
 
@@ -9,24 +9,14 @@ A comprehensive machine learning and geospatial analytics framework for analyzin
 This project combines predictive machine learning models, advanced spatial analytics, and interactive web applications to answer key traffic safety questions:
 1. **Severity Prediction**: Classifying and predicting crash severity based on environmental, temporal, road condition, and vehicle attributes.
 2. **Geospatial Hotspot Detection**: Identifying spatial accident clusters using **DBSCAN (Density-Based Spatial Clustering of Applications with Noise)** with Haversine metrics.
-3. **Regional Risk Scoring**: Aggregating severity metrics across spatial boundaries (postcodes / community areas) and clusters to rank high-risk zones.
+3. **Regional Risk Scoring**: Aggregating severity metrics across spatial boundaries (community areas) and clusters to rank high-risk zones.
 4. **Interactive Exploration**: Enabling dynamic data exploration through Plotly, Folium, and multi-featured Dash applications.
 
 ---
 
-## 📊 Datasets & DBSCAN Hotspot Clustering
+## 📊 Dataset & DBSCAN Hotspot Clustering
 
-The pipeline is benchmarked and applied across two distinct large-scale datasets:
-
-### 1️⃣ **NSW Dataset (New South Wales, Australia)** — *~70,000 Records*
-- **Spatial Unit**: ABS 2021 Postal Areas (POA / Postcodes).
-- **Processing**:
-  - Validated coordinates and spatial join with ABS POA 2021 shapefiles (`EPSG:4326`).
-  - Applied global Haversine-distance DBSCAN clustering to detect localized accident hotspots.
-  - Calculated severity-weighted risk scores per postcode and cluster.
-- **Visualizations**: Plotly interactive choropleth, Folium heatmaps, and Dash web app.
-
-### 2️⃣ **Chicago Dataset (Chicago, IL, USA)** — *~1,000,000 Records*
+### **Chicago Dataset (Chicago, IL, USA)** — *~1,000,000 Records*
 - **Spatial Unit**: 77 Chicago Community Areas (`Boundaries - Community Areas`).
 - **Processing**:
   - Full data cleaning pipeline handling missing values, temporal features, and injury categorizations.

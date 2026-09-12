@@ -76,7 +76,7 @@ RISK_COLORS = {
 }
 
 def create_professional_choropleth(show_crashes=False, metric="weighted_score"):
-    """Create professional choropleth map like NSW postcode map"""
+    """Create professional choropleth map of Chicago community areas"""
     fig = go.Figure()
     
     # Add community area choropleth
