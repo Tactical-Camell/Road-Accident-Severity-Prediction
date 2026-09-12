@@ -1,92 +1,129 @@
+<div align="center">
+
 # 🚦 Road Accident Severity Prediction & Geospatial Risk Mapping
 
-A comprehensive machine learning and geospatial analytics framework for analyzing road crash severity, detecting geographic hotspots using **DBSCAN clustering**, computing severity-weighted risk indices, and interactively visualizing accident risks across the **City of Chicago, IL, USA** crash dataset.
+Machine learning + geospatial analytics on **~940,000 Chicago traffic crashes** — severity
+classification with LightGBM, SHAP/LIME explainability, and DBSCAN hotspot detection with
+severity-weighted risk indices.
+
+[![Live Dashboard](https://img.shields.io/badge/▶_Live_Dashboard-Open-06b6d4?style=for-the-badge)](https://sanya28wd.github.io/Road-Accident-Severity-Prediction/)
+[![Python](https://img.shields.io/badge/Python-3.13-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
+[![LightGBM](https://img.shields.io/badge/LightGBM-Best_Model-9ACD32?style=for-the-badge)](road-accident-severity/reports/metrics.json)
+[![DBSCAN](https://img.shields.io/badge/DBSCAN-Haversine-8b5cf6?style=for-the-badge)](road-accident-severity/GeospatialRisk/Chicago/dbscan_hotspots.py)
+
+### 👉 [**Try the live dashboard**](https://sanya28wd.github.io/Road-Accident-Severity-Prediction/) — adjust the inputs and watch the prediction move.
+
+[![Dashboard demo](assets/dashboard-demo.gif)](https://sanya28wd.github.io/Road-Accident-Severity-Prediction/)
+
+</div>
 
 ---
 
-## 📌 Project Overview
+## 🧭 Jump to
 
-This project combines predictive machine learning models, advanced spatial analytics, and interactive web applications to answer key traffic safety questions:
-1. **Severity Prediction**: Classifying and predicting crash severity based on environmental, temporal, road condition, and vehicle attributes.
-2. **Geospatial Hotspot Detection**: Identifying spatial accident clusters using **DBSCAN (Density-Based Spatial Clustering of Applications with Noise)** with Haversine metrics.
-3. **Regional Risk Scoring**: Aggregating severity metrics across spatial boundaries (community areas) and clusters to rank high-risk zones.
-4. **Interactive Exploration**: Enabling dynamic data exploration through Plotly, Folium, and multi-featured Dash applications.
-
----
-
-## 📊 Dataset & DBSCAN Hotspot Clustering
-
-### **Chicago Dataset (Chicago, IL, USA)** — *~1,000,000 Records*
-- **Spatial Unit**: 77 Chicago Community Areas (`Boundaries - Community Areas`).
-- **Processing**:
-  - Full data cleaning pipeline handling missing values, temporal features, and injury categorizations.
-  - Spatial join linking crash point geometries with 77 official community area polygons.
-  - **Scalable Grouped DBSCAN**: To efficiently scale DBSCAN clustering to ~1,000,000 records without memory bottlenecks, DBSCAN clustering is executed in parallel groups per community area (`group_col="community_area_number"`).
-  - Calculated crash-level, community-level, and cluster-level severity risk indices.
-- **Visualizations**: Interactive Dash applications (`dashapp.py`, `interactive_dash.py`) with dynamic filtering by community area, minimum crash threshold, and severity categories.
-
----
-
-## 📈 Weighted Severity Risk Score
-
-To accurately quantify geographic danger beyond raw crash counts, a weighted severity index is computed for each region and DBSCAN cluster:
-
-$$\text{Risk Index} = \frac{3 \times \text{Fatal} + 2 \times \text{Incapacitating/Serious} + 1 \times \text{Non-Incapacitating/Moderate} + 0.5 \times \text{Minor/Possible}}{\text{Total Crashes}}$$
-
-| Severity Level | Weight | Description |
+| | | |
 |---|---|---|
-| **Fatal Injury** | `3.0` | Fatal crashes |
-| **Serious / Incapacitating Injury** | `2.0` | Severe injuries requiring hospitalization |
-| **Moderate / Non-Incapacitating Injury** | `1.0` | Evident non-incapacitating injuries |
-| **Minor / Possible Injury** | `0.5` | Reported minor injuries / pain |
-
-A higher score indicates a higher concentration of severe or fatal accidents relative to total crash count.
+| [📊 Dataset & clustering](#-dataset--dbscan-hotspot-clustering) | [📈 Risk score](#-weighted-severity-risk-score) | [🧠 Model results](#-model-results--explainability) |
+| [🧱 Project structure](#-project-structure) | [🚀 Getting started](#-getting-started) | [👥 Contributors](#-contributors) |
 
 ---
 
-## 🧠 Machine Learning & Explainability
+## 📌 What this project answers
 
-- **Model Architectures**: Logistic Regression, Extra Trees, XGBoost, and LightGBM models trained for crash severity classification.
-- **Class Imbalance Handling**: Integrated SMOTE (Synthetic Minority Over-sampling Technique) in `imblearn` pipelines.
-- **Explainability**: Feature importance analysis and SHAP/LIME outputs (`explainability.py`) to highlight key severity drivers (speed limits, road alignment, weather, lighting conditions).
+1. **Severity prediction** — will a crash result in *injury / tow* or *no injury / drive away*, given road, weather, lighting, time and vehicle attributes?
+2. **Hotspot detection** — where do crashes cluster spatially? Found with **DBSCAN** using Haversine distance.
+3. **Regional risk scoring** — which of Chicago's 77 community areas carry the most severity-weighted risk, not just the most crashes?
+4. **Interactive exploration** — Plotly / Folium / Dash apps, plus the published dashboard above.
 
 ---
 
-## 🧱 Project Directory Structure
+<details open>
+<summary><h2>📊 Dataset & DBSCAN Hotspot Clustering</h2></summary>
+
+### Chicago Traffic Crashes — *~940,000 records*
+
+- **Source**: City of Chicago `Traffic_Crashes_-_Crashes.csv` (173 MB, not committed — see [Getting started](#-getting-started)).
+- **Spatial unit**: the 77 official Chicago Community Areas (`Boundaries - Community Areas`).
+- **Processing**:
+  - Full cleaning pipeline: missing values, temporal features, injury categorisation.
+  - Spatial join linking crash point geometries to the 77 community-area polygons (`EPSG:4326`).
+  - **Scalable grouped DBSCAN** — clustering runs per community area (`group_col="community_area_number"`) so ~940k points cluster without blowing up memory on a single global distance matrix.
+  - Crash-level, community-level and cluster-level severity risk indices.
+- **Visualisations**: Dash apps (`dashapp.py`, `interactive_dash.py`) with live filtering by community area, minimum crash threshold and severity category.
+
+</details>
+
+<details>
+<summary><h2>📈 Weighted Severity Risk Score</h2></summary>
+
+Raw crash counts reward busy roads, not dangerous ones. Each region and cluster instead gets a
+severity-weighted index:
+
+$$\text{Risk Index} = \frac{3 \times \text{Fatal} + 2 \times \text{Incapacitating} + 1 \times \text{Non-Incapacitating} + 0.5 \times \text{Possible Injury}}{\text{Total Crashes}}$$
+
+| Severity level | Weight | Description |
+|---|---|---|
+| **Fatal injury** | `3.0` | Fatal crashes |
+| **Incapacitating injury** | `2.0` | Severe injuries requiring hospitalisation |
+| **Non-incapacitating injury** | `1.0` | Evident but non-incapacitating injuries |
+| **Possible injury** | `0.5` | Reported minor injury / pain |
+
+A higher score means severe and fatal outcomes are concentrated there relative to crash volume.
+
+</details>
+
+<details>
+<summary><h2>🧠 Model Results & Explainability</h2></summary>
+
+Binary target: `INJURY AND / OR TOW DUE TO CRASH` vs `NO INJURY / DRIVE AWAY`.
+Five-fold stratified cross-validation, SMOTE for class imbalance.
+
+| Model | Macro F1 | Balanced accuracy |
+|---|---|---|
+| **LightGBM** ✅ | **0.804** | **0.797** |
+| XGBoost | 0.804 | 0.796 |
+| ExtraTrees | 0.781 | 0.770 |
+| LogReg + SMOTE | 0.743 | 0.785 |
+| LogisticRegression | 0.741 | 0.785 |
+
+**Held-out test set (LightGBM):** macro F1 **0.806**, balanced accuracy **0.799**
+— see [`reports/metrics.json`](road-accident-severity/reports/metrics.json).
+
+**Explainability** (`explainability.py`): SHAP global + local attribution and LIME instance
+explanations, highlighting speed limit, road alignment, weather and lighting as the dominant
+severity drivers. Outputs land in [`reports/explainability_outputs/`](road-accident-severity/reports/explainability_outputs).
+
+</details>
+
+<details>
+<summary><h2>🧱 Project Structure</h2></summary>
 
 ```
 Road-Accident-Severity-Prediction/
-│
-├── README.md                          # Comprehensive project documentation
-├── requirements.txt                   # Python dependencies
-│
+├── README.md
+├── requirements.txt
+├── assets/dashboard-demo.gif
 └── road-accident-severity/
-    ├── modelling.py                   # Machine learning model training & cross-validation
-    ├── explainability.py              # Model explainability & feature importance analysis
-    │
-    ├── reports/                       # Confusion matrices, CV comparisons, feature importance plots
-    │   ├── confusion_matrix.png
-    │   ├── cross validation metrics comparison.png
-    │   ├── cv_results.csv
-    │   └── feature_importance_LightGBM.png
-    │
-    └── GeospatialRisk/
-        └── Chicago/
-            ├── cleaning.py            # Data cleaning pipeline for Chicago crash data
-            ├── prepare_geodata.py     # GeoDataFrame conversion & spatial join with 77 community areas
-            ├── dbscan_hotspots.py     # Scalable per-community area DBSCAN hotspot clustering
-            ├── severity_pipeline.py   # Crash, community area, and cluster risk scoring
-            └── app/
-                ├── dashapp.py         # Dash choropleth & hotspot web dashboard
-                └── interactive_dash.py# Advanced interactive Dash application with live filters
+    ├── modelling.py                   # Training & cross-validation
+    ├── explainability.py              # SHAP / LIME analysis
+    ├── reports/                       # Confusion matrix, CV comparison, SHAP outputs
+    └── GeospatialRisk/Chicago/
+        ├── cleaning.py                # Crash data cleaning pipeline
+        ├── prepare_geodata.py         # GeoDataFrame + spatial join (77 community areas)
+        ├── dbscan_hotspots.py         # Per-community-area DBSCAN clustering
+        ├── severity_pipeline.py       # Crash / area / cluster risk scoring
+        └── app/
+            ├── dashapp.py             # Choropleth & hotspot dashboard
+            └── interactive_dash.py    # Dash app with live filters
 ```
 
----
+</details>
 
-## 🚀 Getting Started
+<details>
+<summary><h2>🚀 Getting Started</h2></summary>
 
-### 1. Installation
-Clone the repository and install the dependencies:
+### 1. Install
+
 ```bash
 git clone https://github.com/Chirudeva-Reddy/Road-Accident-Severity-Prediction.git
 cd Road-Accident-Severity-Prediction
@@ -94,27 +131,51 @@ git checkout geospatial-clustering-chicago
 pip install -r requirements.txt
 ```
 
-### 2. Run Geospatial Risk Pipeline (Chicago)
-```bash
-# Clean and prepare GeoJSON spatial datasets
-python -m road-accident-severity.GeospatialRisk.Chicago.prepare_geodata
+### 2. Get the crash data
 
-# Execute DBSCAN hotspot clustering across community areas
-python -m road-accident-severity.GeospatialRisk.Chicago.dbscan_hotspots
+The 173 MB crash CSV is gitignored. Download **Traffic Crashes – Crashes** from the
+[Chicago Data Portal](https://data.cityofchicago.org/Transportation/Traffic-Crashes-Crashes/85ca-t3if)
+and save it to:
 
-# Compute severity risk indices
-python -m road-accident-severity.GeospatialRisk.Chicago.severity_pipeline
+```
+road-accident-severity/GeospatialRisk/Chicago/dataset/Traffic_Crashes_-_Crashes.csv
 ```
 
-### 3. Launch Interactive Dash App
+### 3. Run the geospatial pipeline
+
 ```bash
-python road-accident-severity/GeospatialRisk/Chicago/app/interactive_dash.py
+cd road-accident-severity
+python -m GeospatialRisk.Chicago.prepare_geodata
+python -m GeospatialRisk.Chicago.dbscan_hotspots
+python -m GeospatialRisk.Chicago.severity_pipeline
 ```
-Open your browser and navigate to `http://127.0.0.1:8050/`.
+
+> The modules use relative imports, so run them with `-m` from inside `road-accident-severity/`
+> — the repo root folder name contains hyphens and is not a valid Python package name.
+
+### 4. Launch the interactive dashboard
+
+```bash
+python GeospatialRisk/Chicago/app/interactive_dash.py
+```
+
+Then open `http://127.0.0.1:8050/`.
+
+</details>
 
 ---
 
-## 👥 Contributors & License
+## 👥 Contributors
 
-- Academic project for Road Accident Severity Prediction and Geospatial Risk Analytics.
-- Licensed for educational and research use.
+<div align="center">
+
+| [<img src="https://github.com/aarushi4-ux.png" width="90" alt="Aarushi Kothari"><br><sub><b>Aarushi Kothari</b></sub>](https://github.com/aarushi4-ux) | [<img src="https://github.com/Shreiya-Muthuvelan.png" width="90" alt="Shreiya Muthuvelan"><br><sub><b>Shreiya Muthuvelan</b></sub>](https://github.com/Shreiya-Muthuvelan) | [<img src="https://github.com/Chirudeva-Reddy.png" width="90" alt="Chirudeva Reddy"><br><sub><b>Chirudeva Reddy</b></sub>](https://github.com/Chirudeva-Reddy) | [<img src="https://github.com/sanya28wd.png" width="90" alt="Sanya Wadhawan"><br><sub><b>Sanya Wadhawan</b></sub>](https://github.com/sanya28wd) |
+| :---: | :---: | :---: | :---: |
+| `2023A7PS0342U` | `2023A7PS0343U` | `2023A7PS0331U` | `2023A7PS0296U` |
+
+</div>
+
+**Supervisor:** Dr. Ashish Gupta
+**Institution:** BITS Pilani — Dubai Campus, DIAC, Dubai, U.A.E.
+
+Academic project. Licensed for educational and research use.
